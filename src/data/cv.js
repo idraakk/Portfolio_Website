@@ -37,7 +37,7 @@ export const cv = {
       company: 'Amazon',
       companyUrl: 'https://www.amazon.jobs/',
       period: 'Jan 2026 — Jun 2026',
-      location: 'India',
+      location: 'Bengaluru, India',
       type: 'Internship',
       stack: ['Java', 'AWS', 'DynamoDB', 'SQS', 'API Gateway', 'ECS Fargate', 'AWS CDK'],
       highlights: [
@@ -52,7 +52,7 @@ export const cv = {
       company: 'Code Gain Technologies',
       companyUrl: null,
       period: 'Jul 2025 — Dec 2025',
-      location: 'India',
+      location: 'Remote',
       type: 'Internship',
       stack: ['Python', 'FastAPI', 'RAG', 'PostgreSQL', 'React', 'TypeScript'],
       highlights: [
@@ -65,10 +65,10 @@ export const cv = {
 
   education: [
     {
-      degree: 'B.Tech. Electronics and Communication Engineering',
+      degree: 'Bachelors of Technology',
       university: 'Jaypee Institute of Information Technology',
       year: '2022 — 2026',
-      field: 'Noida, India',
+      field: 'Electronics and Communication Engineering',
       thesis: '',
       gpa: '',
     },
