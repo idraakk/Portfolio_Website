@@ -1,10 +1,10 @@
-﻿import { test, expect } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
 test('portfolio navigation, links, themes, and closing tabs', async ({ page, request }) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
-  await page.goto('/');
-  await expect(page).toHaveTitle('Idraak Mohd Khan — Software Engineer');
+  await page.goto('./');
+  await expect(page).toHaveTitle('Idraak Mohd Khan - Software Engineer');
   await expect(page.locator('#file-about')).toContainText('Idraak Mohd Khan');
   for (const name of ['experience.json', 'education.yml', 'skills.ts', 'projects.tsx', 'contact.sh']) {
     await page.getByRole('tab', { name: new RegExp(name) }).click();
@@ -24,22 +24,22 @@ test('portfolio navigation, links, themes, and closing tabs', async ({ page, req
   await expect(page.getByText('No files open.')).toBeVisible();
   await page.getByRole('button', { name: 'Reopen portfolio files' }).click();
   await expect(page.locator('#file-about')).toBeVisible();
-  const resume = await request.get('/resume.pdf');
+  const resume = await request.get('resume.pdf');
   expect(resume.status()).toBe(200);
   expect((await resume.body()).subarray(0, 5).toString()).toBe('%PDF-');
-  const sitemap = await request.get('/sitemap.xml');
+  const sitemap = await request.get('sitemap.xml');
   expect(sitemap.status()).toBe(200);
-  expect(await sitemap.text()).toContain('<loc>http://localhost:3000/</loc>');
-  const api = await request.get('/api/missing');
-  expect(api.status()).toBe(404);
-  expect(await api.json()).toEqual({ error: 'Route not found' });
+  expect(await sitemap.text()).toContain('<loc>https://idraakk.github.io/Portfolio_Website/</loc>');
+  await expect(page.locator('a[download]')).toHaveAttribute('href', '/Portfolio_Website/resume.pdf');
+  const favicon = await request.get('favicon.svg');
+  expect(favicon.status()).toBe(200);
   await page.screenshot({ path: 'test-results/desktop.png', fullPage: true });
   expect(errors).toEqual([]);
 });
 
 test('mobile explorer and content fit the viewport', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/');
+  await page.goto('./');
   await expect(page.getByRole('button', { name: 'Show terminal' })).toBeVisible();
   await page.getByTitle('Explorer', { exact: false }).click();
   await page.getByRole('button', { name: 'experience.json', exact: false }).first().click();

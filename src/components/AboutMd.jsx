@@ -22,7 +22,7 @@ export default function AboutMd() {
       </span>
       <></>
       <C>{'<!-- status: ' + identity.availabilityNote + ' -->'}</C>
-      <span><MdLink href="/resume.pdf" download="Idraak-Mohd-Khan-Resume.pdf">↓ Download resume.pdf</MdLink></span>
+      <span><MdLink href={`${import.meta.env.BASE_URL}resume.pdf`} download="Idraak-Mohd-Khan-Resume.pdf">↓ Download resume.pdf</MdLink></span>
       <></>
       <MdH2>## About</MdH2>
       <></>

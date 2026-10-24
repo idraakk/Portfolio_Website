@@ -1,6 +1,6 @@
 import { defineConfig } from '@playwright/test';
 export default defineConfig({
   testDir: './tests',
-  use: { baseURL: 'http://localhost:3000', channel: 'msedge', headless: true },
-  webServer: { command: 'npm.cmd run start', url: 'http://localhost:3000', reuseExistingServer: true },
+  use: { baseURL: 'http://127.0.0.1:3000/Portfolio_Website/', channel: 'msedge', headless: true },
+  webServer: { command: process.platform === 'win32' ? 'npm.cmd run start' : 'npm run start', url: 'http://127.0.0.1:3000/Portfolio_Website/', reuseExistingServer: false },
 });

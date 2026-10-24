@@ -1,2 +1,7 @@
 import type { Config } from '@react-router/dev/config';
-export default { appDirectory: 'src' } satisfies Config;
+
+export default {
+  appDirectory: 'src',
+  ssr: false,
+  basename: '/Portfolio_Website/',
+} satisfies Config;

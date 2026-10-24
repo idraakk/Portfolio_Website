@@ -11,7 +11,7 @@ npm.cmd ci
 npm.cmd run dev
 ```
 
-Open the URL printed by Vite, normally http://localhost:5173. In PowerShell,
+Open the URL printed by Vite, normally http://localhost:5173/Portfolio_Website/. In PowerShell,
 `npm.cmd` avoids the script execution-policy error from `npm.ps1`.
 On macOS/Linux, use `npm` instead.
 
@@ -23,9 +23,27 @@ npm.cmd run build
 npm.cmd run start
 ```
 
-Production normally serves at http://localhost:3000. This is a server-rendered
-React Router app: deploy both `build/client` and `build/server` with a Node server.
-No environment variables or external database are required.
+This is a static React Router app. Deploy only `build/client`; no running Node
+server or database is required. `npm.cmd run start` previews the built site at
+http://127.0.0.1:3000/Portfolio_Website/ (local preview only).
+
+## GitHub Pages deployment
+
+1. In `idraakk/Portfolio_Website`, open Settings > Pages.
+2. Under Build and deployment, select GitHub Actions as the source.
+3. Commit these changes and push to `main`.
+4. Open Actions > Deploy portfolio to GitHub Pages and wait for build/deploy to succeed.
+5. Visit https://idraakk.github.io/Portfolio_Website/.
+
+Every push to `main` triggers deployment. You can also use Actions > Run workflow.
+The workflow builds and uploads `build/client`; do not commit build output.
+GitHub Free requires a public repository for Pages.
+
+The Vite base, React Router basename, and browser tests use `/Portfolio_Website/`.
+Resume and favicon links use Vite's base URL automatically. If you later connect
+a custom domain, change both config paths to `/`, update the sitemap URL and test
+expectations, then rebuild. The unused server API route has been removed, and
+`public/sitemap.xml` replaces the dynamic sitemap.
 
 Browser tests use an installed Microsoft Edge browser:
 
@@ -33,9 +51,9 @@ Browser tests use an installed Microsoft Edge browser:
 npm.cmd run test:e2e
 ```
 
-Build first. Tests start the production server automatically if port 3000 is free.
+Build first. Tests start a static preview automatically; port 3000 must be free.
 They cover navigation, profile links, theme persistence, closing/reopening all tabs,
-mobile Explorer, viewport overflow, resume delivery, sitemap, and API 404 responses.
+mobile Explorer, viewport overflow, resume delivery, sitemap, favicon, and GitHub Pages asset paths.
 
 ## Personalize
 
