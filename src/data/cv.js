@@ -116,6 +116,7 @@ export const cv = {
       tagline: 'Turn long videos into short learning sessions.',
       description: 'MicroGram turns YouTube videos and playlists into swipeable learning reels. Choose a reel length, save frames with your own notes, and pick up where you left off.',
       url: 'https://idraakk.github.io/Idraak-Collection/microgram/index.html',
+      previewUrl: 'https://idraakk.github.io/Microgram_Preview_Web/',
       screenshots: [
         { src: 'microgram-lecture-profile.webp', alt: 'MicroGram lecture overview showing progress and a grid of short reels' },
         { src: 'microgram-library.webp', alt: 'MicroGram Library showing imported videos and playlists' },

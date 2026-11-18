@@ -12,6 +12,9 @@ export default function ProductsMd() {
     <span key={`${product.name}-status`}>{product.platform} · {product.status}</span>,
     <span key={`${product.name}-description`}>{product.description}</span>,
     <span key={`${product.name}-link`}><MdLink href={product.url}>Explore {product.name}</MdLink></span>,
+    product.previewUrl && (
+      <span key={`${product.name}-preview`}><MdLink href={product.previewUrl}>Preview live in browser</MdLink></span>
+    ),
   ]);
 
   return (

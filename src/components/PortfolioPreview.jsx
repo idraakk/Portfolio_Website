@@ -163,7 +163,14 @@ export default function PortfolioPreview() {
                   <h3>{product.name}</h3>
                   <p className="folio-job-title">{product.tagline}</p>
                   <p className="folio-description">{product.description}</p>
-                  <NewTabLink className="folio-primary" href={product.url}>Explore {product.name} <ArrowUpRight size={15} aria-hidden="true" /></NewTabLink>
+                  <div className="folio-product-actions">
+                    <NewTabLink className="folio-primary" href={product.url}>Explore {product.name} <ArrowUpRight size={15} aria-hidden="true" /></NewTabLink>
+                    {product.previewUrl && (
+                      <NewTabLink className="folio-primary folio-product-preview" href={product.previewUrl}>
+                        Preview live in browser <ArrowUpRight size={15} aria-hidden="true" />
+                      </NewTabLink>
+                    )}
+                  </div>
                 </div>
               </article>
             ))}

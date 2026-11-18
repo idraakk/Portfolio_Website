@@ -211,6 +211,9 @@ test('mobile explorer and content fit the viewport', async ({ page }) => {
   await expect(products.getByRole('heading', { name: 'Live Products' })).toBeInViewport();
   await expect(products.getByRole('heading', { name: 'MicroGram' })).toBeInViewport();
   await expect(products.getByRole('link', { name: 'Explore MicroGram' })).toHaveAttribute('href', 'https://idraakk.github.io/Idraak-Collection/microgram/index.html');
+  const livePreview = products.getByRole('link', { name: 'Preview live in browser' });
+  await expect(livePreview).toHaveAttribute('href', 'https://idraakk.github.io/Microgram_Preview_Web/');
+  await expect(livePreview).toHaveAttribute('target', '_blank');
   await expect(products.getByRole('link', { name: /Browse Idraak/ })).toHaveAttribute('href', 'https://idraakk.github.io/Idraak-Collection/');
   const microGramUrl = 'https://idraakk.github.io/Idraak-Collection/microgram/index.html';
   await page.context().route(microGramUrl, (route) => route.fulfill({ body: 'MicroGram' }));

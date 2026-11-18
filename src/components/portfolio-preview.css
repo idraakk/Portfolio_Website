@@ -766,7 +766,22 @@
   margin-inline: 0.2rem;
 }
 
-.folio-product-copy .folio-primary,
+.folio-product-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+}
+
+.folio-product-preview {
+  background: #f3dce7;
+  color: #55253f;
+}
+
+.folio-product-preview:hover {
+  background: #edcbdd;
+}
+
 .folio-collection-link {
   margin-top: 0.9rem;
 }
