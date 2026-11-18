@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, CodeXml, Maximize2, Minimize2, Play } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router';
 
 import { useWorkspace } from '@/hooks/use-workspace.jsx';
 import { useHotkeys } from '@/hooks/use-hotkeys.jsx';
@@ -36,6 +37,10 @@ const sectionMap = {
 
 const HomePage = () => {
   const { activeId, reopenAll, sidebarOpen } = useWorkspace();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const historyPreview = location.state?.portfolioPreview === true;
+  const historySection = location.state?.previewSection;
   const [view, setView] = useState('split');
   const [closingPreview, setClosingPreview] = useState(false);
   const [runRequest, setRunRequest] = useState(null);
@@ -43,6 +48,8 @@ const HomePage = () => {
   const [explorerWidth, setExplorerWidth] = useState(DEFAULT_EXPLORER_WIDTH);
   const outputRef = useRef(null);
   const runButtonRef = useRef(null);
+  const wasInPreviewHistory = useRef(false);
+  const restoreSplit = useRef(false);
   useHotkeys();
 
   useEffect(() => {
@@ -66,20 +73,56 @@ const HomePage = () => {
     return () => { canceled = true; };
   }, [closingPreview]);
 
-  function closePreview() {
+  const showEditor = useCallback(() => {
     if (window.matchMedia(COMPACT_PREVIEW).matches && window.matchMedia('(prefers-reduced-motion: no-preference)').matches) {
       setClosingPreview(true);
     } else {
       setView('editor');
       runButtonRef.current?.focus({ preventScroll: true });
     }
+  }, []);
+
+  useEffect(() => {
+    if (historyPreview) {
+      setClosingPreview(false);
+      setView('preview');
+      if (historySection) setRunRequest({ section: historySection });
+    } else if (wasInPreviewHistory.current) {
+      if (restoreSplit.current) setView('split');
+      else showEditor();
+      restoreSplit.current = false;
+    }
+    wasInPreviewHistory.current = historyPreview;
+  }, [historyPreview, historySection, showEditor]);
+
+  function openFullPreview(section) {
+    navigate(
+      { pathname: location.pathname, search: location.search, hash: location.hash },
+      { state: { portfolioPreview: true, previewSection: section }, preventScrollReset: true },
+    );
+  }
+
+  function closePreview() {
+    if (historyPreview) navigate(-1);
+    else showEditor();
+  }
+
+  function toggleExpandedPreview() {
+    if (historyPreview) {
+      restoreSplit.current = true;
+      navigate(-1);
+    } else {
+      openFullPreview();
+    }
   }
 
   function runPortfolio() {
     setClosingPreview(false);
-    if (window.matchMedia(COMPACT_PREVIEW).matches) {
-      setView('preview');
-    } else if (view === 'editor') {
+    if (window.matchMedia(COMPACT_PREVIEW).matches && !historyPreview) {
+      openFullPreview(activeId ?? 'about');
+      return;
+    }
+    if (view === 'editor') {
       setView('split');
     }
     setRunRequest({ section: activeId ?? 'about' });
@@ -164,7 +207,7 @@ const HomePage = () => {
                       className="portfolio-view-expand"
                       aria-label={view === 'preview' ? 'Restore split view' : 'Expand preview'}
                       title={view === 'preview' ? 'Restore split view' : 'Expand preview'}
-                      onClick={() => setView(view === 'preview' ? 'split' : 'preview')}
+                      onClick={toggleExpandedPreview}
                     >
                       {view === 'preview' ? <Minimize2 size={14} aria-hidden="true" /> : <Maximize2 size={14} aria-hidden="true" />}
                     </button>

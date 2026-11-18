@@ -159,7 +159,18 @@ test('mobile explorer and content fit the viewport', async ({ page }) => {
   await expect(runHint).toBeVisible();
   const runWord = runHint.locator('strong');
   await expect(runWord).toHaveCSS('animation-name', 'run-hint-pulse');
-  await expect(runWord).toHaveCSS('animation-iteration-count', '2');
+  await expect(runWord).toHaveCSS('animation-iteration-count', 'infinite');
+  const pulseColors = await runWord.evaluate((word) => {
+    const pulse = word.getAnimations()[0];
+    pulse.pause();
+    pulse.currentTime = 0;
+    const resting = getComputedStyle(word).backgroundColor;
+    pulse.currentTime = 700;
+    const highlighted = getComputedStyle(word).backgroundColor;
+    pulse.play();
+    return { resting, highlighted };
+  });
+  expect(pulseColors.highlighted).not.toBe(pulseColors.resting);
   await expect(page.getByRole('separator', { name: 'Resize editor and preview' })).toBeHidden();
   await page.screenshot({ path: 'test-results/mobile.png', fullPage: true });
   const explorerButton = page.getByTitle('Explorer (⌘B)', { exact: true });
@@ -217,6 +228,20 @@ test('mobile explorer and content fit the viewport', async ({ page }) => {
   }
   await products.locator('.folio-product-screens').screenshot({ path: 'test-results/mobile-microgram-phones.png', animations: 'disabled' });
   await page.screenshot({ path: 'test-results/mobile-products.png', fullPage: true, animations: 'disabled' });
+  const headerCoversPhone = await preview.evaluate(async (output) => {
+    const scroller = output.querySelector<HTMLElement>('.folio-scroll')!;
+    const header = output.querySelector('.folio-nav')!;
+    const phone = output.querySelector('.folio-product-phone:nth-child(2)')!;
+    const headerBounds = header.getBoundingClientRect();
+    const phoneBounds = phone.getBoundingClientRect();
+    const x = phoneBounds.x + phoneBounds.width / 2;
+    const y = headerBounds.y + headerBounds.height / 2;
+    scroller.scrollTop += phoneBounds.y + phoneBounds.height / 2 - y;
+    await new Promise(requestAnimationFrame);
+    const overlaps = phone.getBoundingClientRect().top < y && phone.getBoundingClientRect().bottom > y;
+    return overlaps && Boolean(document.elementFromPoint(x, y)?.closest('.folio-nav'));
+  });
+  expect(headerCoversPhone).toBe(true);
   await preview.getByRole('link', { name: 'Portfolio home' }).click();
   await expect(preview.getByRole('heading', { level: 1 })).toBeInViewport();
   const scrollBehavior = await page.evaluate(() => new Promise<string | undefined>((resolve) => {
@@ -233,6 +258,12 @@ test('mobile explorer and content fit the viewport', async ({ page }) => {
   await expect(preview.getByRole('heading', { name: 'Contact', exact: true })).toBeInViewport();
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await expect(preview).toHaveCSS('animation-name', 'none');
+  await page.goBack();
+  await expect(preview).toBeHidden();
+  await expect(editor.locator('#file-products')).toBeVisible();
+  await expect(terminal).toBeVisible();
+  await page.goForward();
+  await expect(products.getByRole('heading', { name: 'Live Products' })).toBeInViewport();
   await preview.getByRole('button', { name: 'Editor', exact: true }).click();
   await expect(runWord).toHaveCSS('animation-name', 'none');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);

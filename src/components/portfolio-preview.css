@@ -233,6 +233,12 @@
     background: #367653;
   }
 
+  .portfolio-run-hint strong {
+    padding-inline: 0.26rem;
+    border-radius: 4px;
+    background: #d3eddb;
+  }
+
   .portfolio-workspace[data-view='preview'] {
     isolation: isolate;
   }
@@ -281,7 +287,7 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .portfolio-workspace:not([data-view='preview']) .portfolio-run-hint strong {
-    animation: run-hint-pulse 1.2s ease-in-out 0.55s 2;
+    animation: run-hint-pulse 2.8s ease-in-out infinite;
   }
 
   .portfolio-output {
@@ -306,8 +312,8 @@
 }
 
 @keyframes run-hint-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.78; }
+  0%, 55%, 100% { background-color: #d3eddb; }
+  25% { background-color: #a1d7b3; }
 }
 
 @keyframes portfolio-panel-enter {
@@ -680,6 +686,7 @@
 
 .folio-product-screens {
   position: relative;
+  isolation: isolate;
   min-height: clamp(19rem, 61cqi, 24rem);
   overflow: hidden;
   background: radial-gradient(ellipse at center, #d380aa7a, transparent 69%), #fbf3f1;
