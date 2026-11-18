@@ -1,6 +1,6 @@
 import React from 'react';
 import CodeView from '@/components/CodeView.jsx';
-import { K, S, N, P, B, Quote, Indent } from '@/components/tokens.jsx';
+import { P, Quote, Indent } from '@/components/tokens.jsx';
 import { cv, FILES } from '@/data/cv.js';
 
 const file = FILES.find((f) => f.id === 'experience');
@@ -92,23 +92,40 @@ export default function ExperienceJson() {
     lines.push(
       <>
         <Indent n={2} />
-        <Key>highlights</Key>
-        <P>[</P>
+        <Key>projects</Key>
+        <P>{'{'}</P>
       </>,
     );
-    job.highlights.forEach((h, i) => {
+    const projects = Object.entries(job.projects);
+    projects.forEach(([name, highlights], projectIndex) => {
       lines.push(
         <>
           <Indent n={3} />
-          <Quote>{h}</Quote>
-          {i < job.highlights.length - 1 && <P>,</P>}
+          <Key>{name}</Key>
+          <P>[</P>
+        </>,
+      );
+      highlights.forEach((highlight, highlightIndex) => {
+        lines.push(
+          <>
+            <Indent n={4} />
+            <Quote>{highlight}</Quote>
+            {highlightIndex < highlights.length - 1 && <P>,</P>}
+          </>,
+        );
+      });
+      lines.push(
+        <>
+          <Indent n={3} />
+          <P>]</P>
+          {projectIndex < projects.length - 1 && <P>,</P>}
         </>,
       );
     });
     lines.push(
       <>
         <Indent n={2} />
-        <P>]</P>
+        <P>{'}'}</P>
       </>,
     );
     lines.push(

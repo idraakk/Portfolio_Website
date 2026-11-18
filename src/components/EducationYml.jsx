@@ -66,7 +66,7 @@ export default function EducationYml() {
   });
 
   return (
-    <CodeView id="education" file={file} footer={`${education.length} degrees · ${certifications.length} certs · YAML 1.2`}>
+    <CodeView id="education" file={file} footer={`${education.length} programs · YAML 1.2`}>
       {lines.map((node, i) => (
         <span key={i}>{node}</span>
       ))}

@@ -1,6 +1,6 @@
 import React from 'react';
 import CodeView from '@/components/CodeView.jsx';
-import { K, S, N, P, T, V, F, A, C, Tag, Quote, Indent, MdLink } from '@/components/tokens.jsx';
+import { K, N, P, T, V, F, A, C, Tag, Quote, Indent, MdLink } from '@/components/tokens.jsx';
 import { cv, FILES } from '@/data/cv.js';
 
 const file = FILES.find((f) => f.id === 'projects');
@@ -35,30 +35,18 @@ export default function ProjectsTsx() {
       <P>: </P>
       <T>string</T>
       <P>; </P>
-      <V>tagline</V>
+      <V>period</V>
       <P>: </P>
       <T>string</T>
-      <P>; </P>
-      <V>year</V>
-      <P>: </P>
-      <T>number</T>
       <P>;</P>
     </>,
   );
   lines.push(
     <>
       <Indent />
-      <V>stack</V>
-      <P>: </P>
-      <T>string</T>
-      <P>[]; </P>
       <V>status</V>
       <P>: </P>
-      <Quote>live</Quote>
-      <P>{' | '}</P>
-      <Quote>maintained</Quote>
-      <P>{' | '}</P>
-      <Quote>archived</Quote>
+      <T>string</T>
       <P>;</P>
     </>,
   );
@@ -77,7 +65,7 @@ export default function ProjectsTsx() {
     </>,
   );
 
-  items.forEach((p, idx) => {
+  items.forEach((p) => {
     lines.push(
       <>
         <Indent />
@@ -86,9 +74,9 @@ export default function ProjectsTsx() {
         <P>: </P>
         <Quote>{p.name}</Quote>
         <P>{', '}</P>
-        <V>year</V>
+        <V>period</V>
         <P>: </P>
-        <N>{p.year}</N>
+        <Quote>{p.period}</Quote>
         <P>{', '}</P>
         <V>status</V>
         <P>: </P>
@@ -98,9 +86,6 @@ export default function ProjectsTsx() {
         <C>{'// ' + p.tagline}</C>
       </>,
     );
-    if (idx === items.length - 1) {
-      // no separator
-    }
   });
 
   lines.push(<P>];</P>);
@@ -188,7 +173,7 @@ export default function ProjectsTsx() {
   lines.push(<P>{'}'}</P>);
 
   return (
-    <CodeView id="projects" file={file} footer={`${items.length} projects · selected work · open source`}>
+    <CodeView id="projects" file={file} footer="Selected work · TSX">
       {lines.map((node, i) => (
         <span key={i}>{node}</span>
       ))}
