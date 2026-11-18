@@ -78,14 +78,14 @@ export default function CommandPalette() {
       label: `Email — ${cv.contact.email}`,
       hint: 'mailto',
       icon: Mail,
-      run: () => window.open(`mailto:${cv.contact.email}`),
+      run: () => window.open(`mailto:${cv.contact.email}`, '_blank', 'noopener,noreferrer'),
     });
     if (cv.contact.calendar) list.push({
       id: 'cal',
       label: 'Book a 20-min intro call',
       hint: 'cal.com',
       icon: Calendar,
-      run: () => window.open(cv.contact.calendar, '_blank'),
+      run: () => window.open(cv.contact.calendar, '_blank', 'noopener,noreferrer'),
     });
     cv.social.forEach((s) =>
       list.push({

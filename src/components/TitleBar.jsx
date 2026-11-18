@@ -11,7 +11,7 @@ const TrafficLight = ({ color }) => (
   />
 );
 
-export default function TitleBar({ onRun }) {
+export default function TitleBar({ onRun, runButtonRef }) {
   const { theme, setTheme, themes } = useTheme();
   const { activeFile, togglePalette } = useWorkspace();
   const [open, setOpen] = useState(false);
@@ -74,7 +74,7 @@ export default function TitleBar({ onRun }) {
             </div>
           )}
         </div>
-        <button type="button" className="portfolio-run-button" onClick={onRun} aria-label="Run portfolio" aria-controls="portfolio-output">
+        <button ref={runButtonRef} type="button" className="portfolio-run-button" onClick={onRun} aria-label="Run portfolio" aria-controls="portfolio-output">
           <Play size={13} fill="currentColor" aria-hidden="true" /> Run
         </button>
         <div className="hidden lg:flex items-center gap-1 ml-2 opacity-60">

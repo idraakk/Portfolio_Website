@@ -101,6 +101,28 @@ export const cv = {
     testingAndTools: ['JUnit', 'Integration Testing', 'End-to-End Testing', 'Git', 'GitHub', 'CI/CD Pipelines'],
   },
 
+  collection: {
+    name: 'Idraak’s Collection',
+    url: 'https://idraakk.github.io/Idraak-Collection/',
+    repo: 'https://github.com/idraakk/Idraak-Collection',
+    description: 'I build and publish independent software. Explore the collection to see what I’ve shipped and try it yourself.',
+  },
+
+  products: [
+    {
+      name: 'MicroGram',
+      platform: 'Android',
+      status: 'Available now',
+      tagline: 'Turn long videos into short learning sessions.',
+      description: 'MicroGram turns YouTube videos and playlists into swipeable learning reels. Choose a reel length, save frames with your own notes, and pick up where you left off.',
+      url: 'https://idraakk.github.io/Idraak-Collection/microgram/index.html',
+      screenshots: [
+        { src: 'microgram-lecture-profile.webp', alt: 'MicroGram lecture overview showing progress and a grid of short reels' },
+        { src: 'microgram-reel.webp', alt: 'MicroGram full-screen reel player showing a lecture' },
+      ],
+    },
+  ],
+
   projects: [
     {
       name: 'Agentic Browser',
@@ -147,5 +169,6 @@ export const FILES = [
   { id: 'education', name: 'education.yml', path: 'src/education.yml', language: 'yaml', icon: 'yml' },
   { id: 'skills', name: 'skills.ts', path: 'src/skills.ts', language: 'typescript', icon: 'ts' },
   { id: 'projects', name: 'projects.tsx', path: 'src/projects.tsx', language: 'tsx', icon: 'tsx' },
+  { id: 'products', name: 'products.md', path: 'src/products.md', language: 'markdown', icon: 'md' },
   { id: 'contact', name: 'contact.sh', path: 'src/contact.sh', language: 'shell', icon: 'sh' },
 ];

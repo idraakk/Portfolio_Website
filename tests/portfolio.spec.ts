@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test('browser appearance does not recolor the editor or preview', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('./');
   const editor = page.getByRole('region', { name: 'Code editor' });
   const preview = page.locator('.folio-hero');
@@ -10,23 +11,24 @@ test('browser appearance does not recolor the editor or preview', async ({ page 
   await page.evaluate(() => document.fonts.ready);
   const editorBounds = (await editor.boundingBox())!;
   const previewBounds = (await preview.boundingBox())!;
-  const editorClip = { ...editorBounds, height: 180 };
-  const previewClip = { ...previewBounds, width: previewBounds.width - 16, height: 180 };
+  const clip = {
+    x: editorBounds.x,
+    y: previewBounds.y,
+    width: previewBounds.x + previewBounds.width - editorBounds.x - 16,
+    height: 180,
+  };
 
   await page.emulateMedia({ colorScheme: 'light', forcedColors: 'none' });
-  const editorColors = await page.screenshot({ clip: editorClip });
-  const previewColors = await page.screenshot({ clip: previewClip });
+  const palette = await page.screenshot({ clip });
   await page.emulateMedia({ colorScheme: 'dark', forcedColors: 'none' });
   const rendering = await page.context().newCDPSession(page);
   await rendering.send('Emulation.setAutoDarkModeOverride', { enabled: true });
 
-  expect((await page.screenshot({ clip: editorClip })).equals(editorColors)).toBe(true);
-  expect((await page.screenshot({ clip: previewClip })).equals(previewColors)).toBe(true);
+  await expect.poll(async () => (await page.screenshot({ clip })).equals(palette)).toBe(true);
 
   await rendering.send('Emulation.setAutoDarkModeOverride', { enabled: false });
   await page.emulateMedia({ colorScheme: 'dark', forcedColors: 'active' });
-  expect((await page.screenshot({ clip: editorClip })).equals(editorColors)).toBe(true);
-  expect((await page.screenshot({ clip: previewClip })).equals(previewColors)).toBe(true);
+  await expect.poll(async () => (await page.screenshot({ clip })).equals(palette)).toBe(true);
 });
 
 test('portfolio navigation, links, themes, and closing tabs', async ({ page, request }) => {
@@ -37,6 +39,18 @@ test('portfolio navigation, links, themes, and closing tabs', async ({ page, req
   const preview = page.getByRole('region', { name: 'Portfolio preview' });
   const editor = page.getByRole('region', { name: 'Code editor' });
   await expect(preview.getByRole('heading', { level: 1, name: 'Idraak Mohd Khan' })).toBeVisible();
+  await expect(preview).toHaveCSS('animation-name', 'portfolio-panel-enter');
+  const hero = preview.locator('.folio-hero');
+  await expect(hero.getByRole('heading', { level: 1 })).toHaveCSS('animation-delay', '0.145s');
+  await expect(hero.locator('.folio-tagline')).toHaveCSS('animation-delay', '0.225s');
+  const outboundLinks = await preview.locator('a:not([href^="#"])').evaluateAll((anchors) =>
+    anchors.map((anchor) => ({ target: anchor.getAttribute('target'), rel: anchor.getAttribute('rel') })),
+  );
+  expect(outboundLinks.length).toBeGreaterThan(0);
+  expect(outboundLinks.every(({ target, rel }) => target === '_blank' && rel?.includes('noopener'))).toBe(true);
+  await expect(preview.getByRole('heading', { level: 2 }).allTextContents()).resolves.toEqual([
+    'Experience', 'Projects', 'Live Products', 'Skills', 'Education', 'Contact',
+  ]);
   await expect(preview.getByText('Running', { exact: true })).toBeVisible();
   await page.screenshot({ path: 'test-results/desktop.png', fullPage: true });
   const editorBox = await editor.boundingBox();
@@ -83,9 +97,10 @@ test('portfolio navigation, links, themes, and closing tabs', async ({ page, req
   await expect(preview.getByRole('heading', { name: 'Marketplace Expansion Service' })).toBeVisible();
   await preview.getByRole('link', { name: 'Portfolio home' }).click();
   await expect(page.locator('#file-about')).toContainText('Idraak Mohd Khan');
-  for (const name of ['experience.json', 'education.yml', 'skills.ts', 'projects.tsx', 'contact.sh']) {
+  for (const name of ['experience.json', 'education.yml', 'skills.ts', 'projects.tsx', 'products.md', 'contact.sh']) {
     await page.getByRole('tab', { name: new RegExp(name) }).click();
     await expect(page.getByRole('tab', { name: new RegExp(name) })).toHaveAttribute('aria-selected', 'true');
+    if (name === 'products.md') await expect(page.locator('#file-products')).toContainText('Live Products');
   }
   await expect(page.locator('#file-contact a[href="https://www.linkedin.com/in/idraak"]')).toBeVisible();
   await expect(page.locator('#file-contact')).not.toContainText('CALENDAR');
@@ -95,7 +110,7 @@ test('portfolio navigation, links, themes, and closing tabs', async ({ page, req
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'github');
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'github');
-  for (const name of ['about.md','experience.json','education.yml','skills.ts','projects.tsx','contact.sh']) {
+  for (const name of ['about.md','experience.json','education.yml','skills.ts','projects.tsx','products.md','contact.sh']) {
     await page.getByRole('button', { name: `Close ${name}`, exact: true }).click();
   }
   await expect(page.getByText('No files open.')).toBeVisible();
@@ -107,8 +122,8 @@ test('portfolio navigation, links, themes, and closing tabs', async ({ page, req
   const sitemap = await request.get('sitemap.xml');
   expect(sitemap.status()).toBe(200);
   expect(await sitemap.text()).toContain('<loc>https://idraakk.github.io/Portfolio_Website/</loc>');
-  await expect(preview.getByRole('link', { name: 'Download résumé' })).toHaveAttribute('href', '/Portfolio_Website/resume.pdf');
-  await expect(page.locator('#file-about a[download]')).toHaveAttribute('href', '/Portfolio_Website/resume.pdf');
+  await expect(preview.getByRole('link', { name: 'View résumé' })).toHaveAttribute('href', '/Portfolio_Website/resume.pdf');
+  await expect(page.locator('#file-about a[href$="resume.pdf"]')).toHaveAttribute('target', '_blank');
   const favicon = await request.get('favicon.svg');
   expect(favicon.status()).toBe(200);
   expect(errors).toEqual([]);
@@ -124,6 +139,7 @@ test('mobile explorer and content fit the viewport', async ({ page }) => {
   const runHint = page.getByText('Tap Run to open the portfolio');
   await expect(editor).toBeVisible();
   await expect(terminal).toBeVisible();
+  const editorTop = (await editor.boundingBox())!.y;
   const terminalHandle = terminal.getByRole('separator', { name: 'Resize terminal' });
   const handle = (await terminalHandle.boundingBox())!;
   const x = Math.round(handle.x + handle.width / 2);
@@ -141,6 +157,9 @@ test('mobile explorer and content fit the viewport', async ({ page }) => {
   await expect(preview).toBeHidden();
   await expect(run).toHaveCSS('background-color', 'rgb(26, 101, 68)');
   await expect(runHint).toBeVisible();
+  const runWord = runHint.locator('strong');
+  await expect(runWord).toHaveCSS('animation-name', 'run-hint-pulse');
+  await expect(runWord).toHaveCSS('animation-iteration-count', '2');
   await expect(page.getByRole('separator', { name: 'Resize editor and preview' })).toBeHidden();
   await page.screenshot({ path: 'test-results/mobile.png', fullPage: true });
   const explorerButton = page.getByTitle('Explorer (⌘B)', { exact: true });
@@ -159,7 +178,58 @@ test('mobile explorer and content fit the viewport', async ({ page }) => {
   await expect(cover).toBeInViewport();
   await expect.poll(() => cover.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
   await page.screenshot({ path: 'test-results/mobile-project.png', fullPage: true });
+  const closing = page.evaluate(() => new Promise<{ visibility: string; top: number }>((resolve) => {
+    const output = document.getElementById('portfolio-output')!;
+    output.addEventListener('animationstart', function capture(event) {
+      if (event.animationName !== 'portfolio-panel-leave') return;
+      output.removeEventListener('animationstart', capture);
+      const codeEditor = document.getElementById('portfolio-editor')!;
+      resolve({ visibility: getComputedStyle(codeEditor).visibility, top: codeEditor.getBoundingClientRect().top });
+    });
+  }));
   await preview.getByRole('button', { name: 'Editor', exact: true }).click();
+  const closedFrame = await closing;
+  expect(closedFrame.visibility).toBe('visible');
+  expect(closedFrame.top).toBe(editorTop);
+  await expect(preview).toBeHidden();
   await expect(terminal).toBeVisible();
+  await page.getByRole('tab', { name: /products\.md/ }).click();
+  await expect(editor.locator('#file-products')).toContainText('MicroGram');
+  await run.click();
+  const products = preview.locator('#portfolio-products');
+  await expect(products.getByRole('heading', { name: 'Live Products' })).toBeInViewport();
+  await expect(products.getByRole('heading', { name: 'MicroGram' })).toBeInViewport();
+  await expect(products.getByRole('link', { name: 'Explore MicroGram' })).toHaveAttribute('href', 'https://idraakk.github.io/Idraak-Collection/microgram/index.html');
+  await expect(products.getByRole('link', { name: /Browse Idraak/ })).toHaveAttribute('href', 'https://idraakk.github.io/Idraak-Collection/');
+  const microGramUrl = 'https://idraakk.github.io/Idraak-Collection/microgram/index.html';
+  await page.context().route(microGramUrl, (route) => route.fulfill({ body: 'MicroGram' }));
+  const [productTab] = await Promise.all([
+    page.waitForEvent('popup'),
+    products.getByRole('link', { name: 'Explore MicroGram' }).click(),
+  ]);
+  await productTab.waitForURL(microGramUrl);
+  await productTab.close();
+  for (const screenshot of await products.getByRole('img').all()) {
+    await expect(screenshot).toHaveJSProperty('naturalWidth', 360);
+  }
+  await page.screenshot({ path: 'test-results/mobile-products.png', fullPage: true, animations: 'disabled' });
+  await preview.getByRole('link', { name: 'Portfolio home' }).click();
+  await expect(preview.getByRole('heading', { level: 1 })).toBeInViewport();
+  const scrollBehavior = await page.evaluate(() => new Promise<string | undefined>((resolve) => {
+    const contact = document.getElementById('portfolio-contact')!;
+    const scrollIntoView = contact.scrollIntoView;
+    contact.scrollIntoView = (options) => {
+      contact.scrollIntoView = scrollIntoView;
+      resolve(typeof options === 'object' ? options.behavior : undefined);
+      scrollIntoView.call(contact, options);
+    };
+    document.querySelector<HTMLAnchorElement>('.folio-hero-actions a[href="#portfolio-contact"]')!.click();
+  }));
+  expect(scrollBehavior).toBe('smooth');
+  await expect(preview.getByRole('heading', { name: 'Contact', exact: true })).toBeInViewport();
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expect(preview).toHaveCSS('animation-name', 'none');
+  await preview.getByRole('button', { name: 'Editor', exact: true }).click();
+  await expect(runWord).toHaveCSS('animation-name', 'none');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });

@@ -24,10 +24,9 @@ export const MdBold = ({ children }) => (
 export const MdItalic = ({ children }) => (
   <span className="text-[var(--syntax-italic)] italic">{children}</span>
 );
-export const MdLink = ({ href, children, download }) => (
+export const MdLink = ({ href, children }) => (
   <a
     href={href}
-    download={download}
     target="_blank"
     rel="noopener noreferrer"
     className="text-[var(--syntax-link)] underline decoration-dotted underline-offset-2 hover:decoration-solid"

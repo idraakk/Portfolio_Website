@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, CodeXml, Maximize2, Minimize2, Play } from 'lucide-react';
 
 import { useWorkspace } from '@/hooks/use-workspace.jsx';
@@ -15,12 +15,14 @@ import ExperienceJson from '@/components/ExperienceJson.jsx';
 import EducationYml from '@/components/EducationYml.jsx';
 import SkillsTs from '@/components/SkillsTs.jsx';
 import ProjectsTsx from '@/components/ProjectsTsx.jsx';
+import ProductsMd from '@/components/ProductsMd.jsx';
 import ContactSh from '@/components/ContactSh.jsx';
 import PortfolioPreview from '@/components/PortfolioPreview.jsx';
 import PaneDivider from '@/components/PaneDivider.jsx';
 
 const DEFAULT_EDITOR_SHARE = 36;
 const DEFAULT_EXPLORER_WIDTH = 184;
+const COMPACT_PREVIEW = '(max-width: 1023px)';
 
 const sectionMap = {
   about: AboutMd,
@@ -28,15 +30,19 @@ const sectionMap = {
   education: EducationYml,
   skills: SkillsTs,
   projects: ProjectsTsx,
+  products: ProductsMd,
   contact: ContactSh,
 };
 
 const HomePage = () => {
   const { activeId, reopenAll, sidebarOpen } = useWorkspace();
   const [view, setView] = useState('split');
+  const [closingPreview, setClosingPreview] = useState(false);
   const [runRequest, setRunRequest] = useState(null);
   const [editorShare, setEditorShare] = useState(DEFAULT_EDITOR_SHARE);
   const [explorerWidth, setExplorerWidth] = useState(DEFAULT_EXPLORER_WIDTH);
+  const outputRef = useRef(null);
+  const runButtonRef = useRef(null);
   useHotkeys();
 
   useEffect(() => {
@@ -45,8 +51,33 @@ const HomePage = () => {
     }
   }, [runRequest]);
 
+  useEffect(() => {
+    if (!closingPreview) return;
+    const exit = outputRef.current?.getAnimations().find((animation) => animation.animationName === 'portfolio-panel-leave');
+    let canceled = false;
+    const finish = () => {
+      if (canceled) return;
+      setClosingPreview(false);
+      setView('editor');
+      runButtonRef.current?.focus({ preventScroll: true });
+    };
+    if (exit) exit.finished.then(finish, finish);
+    else finish();
+    return () => { canceled = true; };
+  }, [closingPreview]);
+
+  function closePreview() {
+    if (window.matchMedia(COMPACT_PREVIEW).matches && window.matchMedia('(prefers-reduced-motion: no-preference)').matches) {
+      setClosingPreview(true);
+    } else {
+      setView('editor');
+      runButtonRef.current?.focus({ preventScroll: true });
+    }
+  }
+
   function runPortfolio() {
-    if (window.matchMedia('(max-width: 1023px)').matches) {
+    setClosingPreview(false);
+    if (window.matchMedia(COMPACT_PREVIEW).matches) {
       setView('preview');
     } else if (view === 'editor') {
       setView('split');
@@ -59,20 +90,18 @@ const HomePage = () => {
   return (
     <>
       <div className="h-dvh w-full flex flex-col bg-[var(--chrome-titlebar)] text-[var(--chrome-fg)] overflow-hidden">
-        <TitleBar onRun={runPortfolio} />
-        {view !== 'preview' && (
-          <p className="portfolio-run-hint">
-            Tap <strong>Run</strong> to open the portfolio <ArrowUpRight size={15} aria-hidden="true" />
-          </p>
-        )}
-
+        <TitleBar onRun={runPortfolio} runButtonRef={runButtonRef} />
         <div className="relative flex-1 flex min-h-0">
           <main
             className="portfolio-workspace"
             data-view={view}
+            data-preview-closing={closingPreview || undefined}
             style={{ '--editor-share': `${editorShare}cqi`, '--explorer-width': `${explorerWidth}px` }}
           >
-            <div className="portfolio-explorer">
+            <p className="portfolio-run-hint" aria-hidden={view === 'preview' || undefined}>
+              Tap <strong>Run</strong> to open the portfolio <ArrowUpRight size={15} aria-hidden="true" />
+            </p>
+            <div className="portfolio-explorer" inert={view === 'preview'} aria-hidden={view === 'preview' || undefined}>
               <ActivityBar />
               <FileExplorer />
             </div>
@@ -92,7 +121,7 @@ const HomePage = () => {
             )}
 
             <div className="portfolio-panes">
-              <section id="portfolio-editor" className="portfolio-editor bg-[var(--syntax-bg)]" aria-label="Code editor">
+              <section id="portfolio-editor" className="portfolio-editor bg-[var(--syntax-bg)]" aria-label="Code editor" inert={view === 'preview'} aria-hidden={view === 'preview' || undefined}>
                 <EditorTabs />
 
                 <div className="flex-1 min-h-0 overflow-y-auto">
@@ -121,13 +150,13 @@ const HomePage = () => {
                 />
               )}
 
-              <section id="portfolio-output" className="portfolio-output" aria-label="Portfolio preview">
+              <section id="portfolio-output" ref={outputRef} className="portfolio-output" aria-label="Portfolio preview" inert={closingPreview}>
                 <div className="portfolio-output-bar">
                   <Play size={13} aria-hidden="true" />
                   <span>Portfolio preview</span>
                   <span className="portfolio-output-status">Running</span>
                   <div className="portfolio-output-controls">
-                    <button type="button" onClick={() => setView('editor')}>
+                    <button type="button" onClick={closePreview}>
                       <CodeXml size={15} aria-hidden="true" /> Editor
                     </button>
                     <button

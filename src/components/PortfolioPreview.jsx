@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  ArrowDownToLine, ArrowUpRight, ChevronDown, Mail, MapPin,
+  ArrowUpRight, ChevronDown, Mail, MapPin,
 } from 'lucide-react';
 import { cv } from '@/data/cv.js';
 import './portfolio-preview.css';
@@ -8,6 +8,7 @@ import './portfolio-preview.css';
 const sections = [
   ['experience', 'Experience'],
   ['projects', 'Projects'],
+  ['products', 'Products'],
   ['skills', 'Skills'],
   ['education', 'Education'],
   ['contact', 'Contact'],
@@ -32,15 +33,20 @@ function Tags({ items }) {
   );
 }
 
+function NewTabLink(props) {
+  return <a {...props} target="_blank" rel="noopener noreferrer" />;
+}
+
 export default function PortfolioPreview() {
-  const { identity, experience, projects, skills, education, certifications, contact, social, stats } = cv;
+  const { identity, experience, collection, products, projects, skills, education, certifications, contact, social, stats } = cv;
   const resume = `${import.meta.env.BASE_URL}resume.pdf`;
 
   function jumpTo(event, id) {
     event.preventDefault();
     const section = document.getElementById(`portfolio-${id}`);
     section?.focus({ preventScroll: true });
-    section?.scrollIntoView({ block: 'start' });
+    const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth';
+    section?.scrollIntoView({ block: 'start', behavior });
   }
 
   return (
@@ -66,9 +72,9 @@ export default function PortfolioPreview() {
             <p className="folio-role">{identity.role}</p>
             <p className="folio-tagline">{identity.tagline}</p>
             <div className="folio-hero-actions">
-              <a className="folio-primary" href={resume} download="Idraak-Mohd-Khan-Resume.pdf">
-                <ArrowDownToLine size={16} aria-hidden="true" /> Download résumé
-              </a>
+              <NewTabLink className="folio-primary" href={resume}>
+                <ArrowUpRight size={16} aria-hidden="true" /> View résumé
+              </NewTabLink>
               <a className="folio-secondary" href="#portfolio-contact" onClick={(event) => jumpTo(event, 'contact')}>
                 Get in touch <ArrowUpRight size={15} aria-hidden="true" />
               </a>
@@ -103,7 +109,7 @@ export default function PortfolioPreview() {
                         <ul>{highlights.map((highlight) => <li key={highlight}>{highlight}</li>)}</ul>
                       </div>
                     ))}
-                    {job.companyUrl && <a className="folio-link" href={job.companyUrl}>Company website <ArrowUpRight size={13} aria-hidden="true" /></a>}
+                    {job.companyUrl && <NewTabLink className="folio-link" href={job.companyUrl}>Company website <ArrowUpRight size={13} aria-hidden="true" /></NewTabLink>}
                   </details>
                 </article>
               ))}
@@ -134,10 +140,34 @@ export default function PortfolioPreview() {
                   <p className="folio-job-title">{project.tagline}</p>
                   <p className="folio-description">{project.description}</p>
                   <Tags items={project.stack} />
-                  <a className="folio-link" href={project.url}>View source on GitHub <ArrowUpRight size={15} aria-hidden="true" /></a>
+                  <NewTabLink className="folio-link" href={project.url}>View source on GitHub <ArrowUpRight size={15} aria-hidden="true" /></NewTabLink>
                 </div>
               </article>
             ))}
+          </section>
+
+          <section id="portfolio-products" className="folio-section" tabIndex={-1}>
+            <h2>Live Products</h2>
+            <p className="folio-products-intro">{collection.description}</p>
+            {products.map((product) => (
+              <article key={product.name} className="folio-product">
+                <div className="folio-product-screens">
+                  {product.screenshots.map(({ src, alt }) => (
+                    <img key={src} src={`${import.meta.env.BASE_URL}${src}`} alt={alt} width={360} height={800} loading="lazy" decoding="async" />
+                  ))}
+                </div>
+                <div className="folio-product-copy">
+                  <p className="folio-product-meta">{product.platform} app <span>·</span> {product.status}</p>
+                  <h3>{product.name}</h3>
+                  <p className="folio-job-title">{product.tagline}</p>
+                  <p className="folio-description">{product.description}</p>
+                  <NewTabLink className="folio-primary" href={product.url}>Explore {product.name} <ArrowUpRight size={15} aria-hidden="true" /></NewTabLink>
+                </div>
+              </article>
+            ))}
+            <NewTabLink className="folio-link folio-collection-link" href={collection.url}>
+              Browse {collection.name} <ArrowUpRight size={15} aria-hidden="true" />
+            </NewTabLink>
           </section>
 
           <section id="portfolio-skills" className="folio-section" tabIndex={-1}>
@@ -171,16 +201,16 @@ export default function PortfolioPreview() {
 
           <section id="portfolio-contact" className="folio-section folio-contact" tabIndex={-1}>
             <h2>Contact</h2>
-            <a className="folio-email" href={`mailto:${contact.email}`}><Mail size={18} aria-hidden="true" /> {contact.email}</a>
+            <NewTabLink className="folio-email" href={`mailto:${contact.email}`}><Mail size={18} aria-hidden="true" /> {contact.email}</NewTabLink>
             <div className="folio-contact-meta">
-              <a href={`tel:${contact.phone.replace(/\s/g, '')}`}>{contact.phone}</a>
+              <NewTabLink href={`tel:${contact.phone.replace(/\s/g, '')}`}>{contact.phone}</NewTabLink>
               <span><MapPin size={15} aria-hidden="true" /> {contact.location}</span>
-              {contact.calendar && <a href={contact.calendar}>Book a call</a>}
+              {contact.calendar && <NewTabLink href={contact.calendar}>Book a call</NewTabLink>}
             </div>
             <ul className="folio-social">
               {social.map(({ label, handle, url }) => (
                 <li key={label}>
-                  <a className="folio-link" href={url} title={handle}>{label} <ArrowUpRight size={14} aria-hidden="true" /></a>
+                  <NewTabLink className="folio-link" href={url} title={handle}>{label} <ArrowUpRight size={14} aria-hidden="true" /></NewTabLink>
                 </li>
               ))}
             </ul>
