@@ -273,8 +273,8 @@ test('MicroGram buttons slide into a destination in the same tab', async ({ page
   await page.addInitScript(() => {
     document.addEventListener('animationstart', (event) => {
       const target = event.target;
-      if (event.animationName === 'folio-product-slide' && target instanceof HTMLElement && target.closest('[data-returning]')) {
-        document.documentElement.dataset.testMicroGramReturn = getComputedStyle(target).animationDirection;
+      if (event.animationName === 'folio-product-return' && target instanceof HTMLElement) {
+        document.documentElement.dataset.testMicroGramReturn = target.hasAttribute('data-branded') ? 'demo' : 'collection';
       }
     });
   });
@@ -284,22 +284,38 @@ test('MicroGram buttons slide into a destination in the same tab', async ({ page
     await page.goto('./');
     const link = page.locator('#portfolio-products').getByRole('link', { name: label });
     await expect(link).toBeVisible();
-    const entry = page.evaluate(() => new Promise<string | null>((resolve) => {
+    const entry = page.evaluate(() => new Promise<{ image: string | null; duration: string; easing: string }>((resolve) => {
       document.addEventListener('animationstart', function record(event) {
         if (event.animationName !== 'folio-product-slide') return;
         document.removeEventListener('animationstart', record);
-        resolve((event.target as HTMLElement).querySelector('img')?.getAttribute('src') ?? null);
+        const target = event.target as HTMLElement;
+        const style = getComputedStyle(target);
+        resolve({
+          image: target.querySelector('img')?.getAttribute('src') ?? null,
+          duration: style.animationDuration,
+          easing: style.animationTimingFunction,
+        });
       });
     }));
     await Promise.all([page.waitForURL(url), link.click()]);
     const demo = label === 'Preview live in browser';
-    expect(await entry).toBe(demo ? '/Portfolio_Website/microgram-startup.png' : null);
+    expect(await entry).toEqual({
+      image: demo ? '/Portfolio_Website/microgram-startup.png' : null,
+      duration: '0.19s',
+      easing: 'cubic-bezier(0.22, 0.75, 0.25, 1)',
+    });
     expect(context.pages()).toHaveLength(1);
-    if (demo) {
-      await page.goBack();
-      await expect(page.locator('html')).toHaveAttribute('data-test-micro-gram-return', 'reverse');
-      await expect(link).toBeVisible();
-      await expect(page.locator('.folio-product-navigation')).toHaveCount(0);
-    }
+    await page.goBack();
+    await expect(page.locator('html')).toHaveAttribute('data-test-micro-gram-return', demo ? 'demo' : 'collection');
+    await expect(link).toBeVisible();
+    await expect(page.locator('.folio-product-navigation')).toHaveCount(0);
+    await expect(page).not.toHaveURL(/microgram-return=/);
   }
+
+  // A restored URL can identify the return even if the browser drops custom history state.
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('./?microgram-return=collection&check=keep');
+  await expect(page.locator('html')).toHaveAttribute('data-test-micro-gram-return', 'collection');
+  await expect(page.getByRole('region', { name: 'Portfolio preview' })).toBeVisible();
+  await expect(page).toHaveURL(/\?check=keep$/);
 });

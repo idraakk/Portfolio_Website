@@ -20,6 +20,7 @@ import ProductsMd from '@/components/ProductsMd.jsx';
 import ContactSh from '@/components/ContactSh.jsx';
 import PortfolioPreview from '@/components/PortfolioPreview.jsx';
 import PaneDivider from '@/components/PaneDivider.jsx';
+import { productReturnKind } from '@/lib/product-navigation.js';
 
 const DEFAULT_EDITOR_SHARE = 36;
 const DEFAULT_EXPLORER_WIDTH = 184;
@@ -41,7 +42,11 @@ const HomePage = () => {
   const navigate = useNavigate();
   const historyPreview = location.state?.portfolioPreview === true;
   const historySection = location.state?.previewSection;
-  const [view, setView] = useState('split');
+  const [view, setView] = useState(() =>
+    typeof window !== 'undefined' && productReturnKind(location.search) && window.matchMedia(COMPACT_PREVIEW).matches
+      ? 'preview'
+      : 'split',
+  );
   const [closingPreview, setClosingPreview] = useState(false);
   const [runRequest, setRunRequest] = useState(null);
   const [editorShare, setEditorShare] = useState(DEFAULT_EDITOR_SHARE);
@@ -97,7 +102,7 @@ const HomePage = () => {
 
   function openFullPreview(section) {
     navigate(
-      { pathname: location.pathname, search: location.search, hash: location.hash },
+      { pathname: location.pathname, search: window.location.search, hash: location.hash },
       { state: { portfolioPreview: true, previewSection: section }, preventScrollReset: true },
     );
   }
@@ -132,7 +137,7 @@ const HomePage = () => {
 
   return (
     <>
-      <div className="h-dvh w-full flex flex-col bg-[var(--chrome-titlebar)] text-[var(--chrome-fg)] overflow-hidden">
+      <div className="portfolio-shell h-dvh w-full flex flex-col bg-[var(--chrome-titlebar)] text-[var(--chrome-fg)] overflow-hidden">
         <TitleBar onRun={runPortfolio} runButtonRef={runButtonRef} />
         <div className="relative flex-1 flex min-h-0">
           <main

@@ -4,15 +4,20 @@ import type { Route } from './+types/root';
 import stylesheet from '@/index.css?url';
 import { ThemeProvider } from '@/hooks/use-theme.jsx';
 import { WorkspaceProvider } from '@/hooks/use-workspace.jsx';
+import { PRODUCT_RETURN_PARAM } from '@/lib/product-navigation.js';
 
 const prepareMicroGramReturn = `
-  if (
-    performance.getEntriesByType('navigation')[0]?.type === 'back_forward' &&
-    history.state?.microgramPortfolioReturn &&
-    matchMedia('(prefers-reduced-motion: no-preference)').matches
-  ) {
-    document.documentElement.setAttribute('data-microgram-return', '');
-  }
+  (() => {
+    function prepare(back) {
+      const marked = new URLSearchParams(location.search).get('${PRODUCT_RETURN_PARAM}');
+      const kind = marked || (back && history.state?.microgramPortfolioReturn ? 'demo' : null);
+      if ((kind === 'demo' || kind === 'collection') && matchMedia('(prefers-reduced-motion: no-preference)').matches) {
+        document.documentElement.setAttribute('data-microgram-return', kind);
+      }
+    }
+    prepare(performance.getEntriesByType('navigation')[0]?.type === 'back_forward');
+    addEventListener('pageshow', (event) => { if (event.persisted) prepare(true); });
+  })();
 `;
 
 export const links: Route.LinksFunction = () => [

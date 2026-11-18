@@ -1,9 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   ArrowUpRight, ChevronDown, Mail, MapPin,
 } from 'lucide-react';
 import { cv } from '@/data/cv.js';
+import { PRODUCT_RETURN_PARAM, productReturnKind } from '@/lib/product-navigation.js';
 import './portfolio-preview.css';
 
 const sections = [
@@ -47,22 +48,32 @@ export default function PortfolioPreview() {
 
   useEffect(() => {
     let frame;
-    function restorePortfolio() {
+    function restorePortfolio(back = false) {
       const { microgramPortfolioReturn, ...state } = history.state ?? {};
-      if (!microgramPortfolioReturn) {
-        setProductNavigation(null);
-        return;
-      }
-      history.replaceState(state, '');
+      const kind = productReturnKind(location.search) ?? (back && microgramPortfolioReturn ? 'demo' : null);
+      if (!kind) return false;
+
+      const url = new URL(location.href);
+      url.searchParams.delete(PRODUCT_RETURN_PARAM);
+      history.replaceState(state, '', url);
       const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (reducedMotion) document.documentElement.removeAttribute('data-microgram-return');
-      setProductNavigation(reducedMotion ? null : { branded: true, returning: true });
+      setProductNavigation(reducedMotion ? null : { branded: kind === 'demo', title: 'MicroGram', returning: true });
       frame = requestAnimationFrame(() => {
-        if (portfolioScroll.current) portfolioScroll.current.scrollTop = microgramPortfolioReturn.scrollTop;
+        if (portfolioScroll.current && Number.isFinite(microgramPortfolioReturn?.scrollTop)) {
+          portfolioScroll.current.scrollTop = microgramPortfolioReturn.scrollTop;
+        } else {
+          document.getElementById('portfolio-products')?.scrollIntoView({ block: 'start', behavior: 'instant' });
+        }
       });
+      return true;
     }
-    const restoreFromCache = (event) => { if (event.persisted) restorePortfolio(); };
-    if (performance.getEntriesByType('navigation')[0]?.type === 'back_forward') restorePortfolio();
+    const restoreFromCache = (event) => {
+      if (event.persisted && !restorePortfolio(true)) {
+        setProductNavigation((current) => current?.returning ? current : null);
+      }
+    };
+    restorePortfolio(performance.getEntriesByType('navigation')[0]?.type === 'back_forward');
     window.addEventListener('pageshow', restoreFromCache);
     return () => {
       cancelAnimationFrame(frame);
@@ -70,11 +81,13 @@ export default function PortfolioPreview() {
     };
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!productNavigation) return;
     const reset = () => setProductNavigation(null);
     const resetOnPop = () => setProductNavigation((current) => current?.returning ? current : null);
-    document.documentElement.removeAttribute('data-microgram-return');
+    const root = document.documentElement;
+    root.removeAttribute('data-microgram-return');
+    root.dataset.microgramMotion = productNavigation.returning ? 'back' : 'open';
     window.addEventListener('popstate', resetOnPop);
     let canceled = false;
     const finish = () => {
@@ -83,6 +96,7 @@ export default function PortfolioPreview() {
         reset();
         return;
       }
+      recordProductReturn(productNavigation.branded);
       window.location.assign(productNavigation.url);
     };
     const entry = navigationSheet.current?.getAnimations?.()[0];
@@ -90,19 +104,26 @@ export default function PortfolioPreview() {
     else finish();
     return () => {
       canceled = true;
+      delete root.dataset.microgramMotion;
       window.removeEventListener('popstate', resetOnPop);
     };
   }, [productNavigation]);
 
+  function recordProductReturn(branded) {
+    const url = new URL(location.href);
+    url.searchParams.set(PRODUCT_RETURN_PARAM, branded ? 'demo' : 'collection');
+    history.replaceState({
+      ...history.state,
+      microgramPortfolioReturn: { scrollTop: portfolioScroll.current?.scrollTop ?? 0 },
+    }, '', url);
+  }
+
   function openProduct(event, title, branded = false) {
     if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    if (branded) {
-      history.replaceState({
-        ...history.state,
-        microgramPortfolioReturn: { scrollTop: portfolioScroll.current?.scrollTop ?? 0 },
-      }, '');
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      recordProductReturn(branded);
+      return;
     }
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const url = event.currentTarget.href;
     event.preventDefault();

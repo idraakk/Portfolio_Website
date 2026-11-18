@@ -809,28 +809,42 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .folio-product-navigation {
-    animation: folio-product-dim 190ms ease-out both;
+  /* Same page motion and keyframes as MicroGram's savedTransition.ts. */
+  html[data-microgram-motion='open'] .portfolio-shell {
+    animation: folio-product-fade 190ms cubic-bezier(.22, .75, .25, 1) both;
+  }
+
+  html[data-microgram-motion='back'] .portfolio-shell {
+    animation: folio-portfolio-reveal 190ms cubic-bezier(.22, .75, .25, 1) both;
   }
 
   .folio-product-navigation-sheet {
-    animation: folio-product-slide 190ms cubic-bezier(0.2, 0.75, 0.3, 1) both;
+    animation: folio-product-slide 190ms cubic-bezier(.22, .75, .25, 1) both;
   }
 
-  .folio-product-navigation[data-returning],
   .folio-product-navigation[data-returning] .folio-product-navigation-sheet {
-    animation-direction: reverse;
+    animation-name: folio-product-return;
   }
 }
 
-@keyframes folio-product-dim {
-  from { background-color: transparent; }
-  to { background-color: rgb(20 15 20 / 55%); }
+@keyframes folio-product-fade {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
 @keyframes folio-product-slide {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
+  from { transform: translate3d(16%, 0, 0); opacity: .82; }
+  to { transform: translate3d(0, 0, 0); opacity: 1; }
+}
+
+@keyframes folio-product-return {
+  from { transform: translate3d(0, 0, 0); opacity: 1; }
+  to { transform: translate3d(16%, 0, 0); opacity: 0; }
+}
+
+@keyframes folio-portfolio-reveal {
+  from { transform: translate3d(-4%, 0, 0); opacity: .94; }
+  to { transform: translate3d(0, 0, 0); opacity: 1; }
 }
 
 .folio-collection-link {

@@ -7,6 +7,18 @@ html[data-microgram-return]::after {
   position: fixed;
   inset: 0;
   z-index: 100;
+  background: #fff8f9;
+  color: #55253f;
+  display: grid;
+  place-items: center;
+  font: 400 clamp(2rem, 6vw, 3.5rem)/1 'Instrument Serif', Georgia, serif;
+}
+
+html[data-microgram-return='collection']::after {
+  content: 'MicroGram';
+}
+
+html[data-microgram-return='demo']::after {
   background: #000 url('/microgram-startup.png') center / min(288px, 100vw) auto no-repeat;
 }
 
