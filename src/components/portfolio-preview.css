@@ -799,6 +799,15 @@
   font: 400 clamp(2rem, 6vw, 3.5rem)/1 'Instrument Serif', Georgia, serif;
 }
 
+.folio-product-navigation-sheet[data-branded] {
+  background: #000;
+}
+
+.folio-product-navigation-sheet img {
+  width: min(288px, 100vw);
+  height: auto;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .folio-product-navigation {
     animation: folio-product-dim 190ms ease-out both;
@@ -806,6 +815,11 @@
 
   .folio-product-navigation-sheet {
     animation: folio-product-slide 190ms cubic-bezier(0.2, 0.75, 0.3, 1) both;
+  }
+
+  .folio-product-navigation[data-returning],
+  .folio-product-navigation[data-returning] .folio-product-navigation-sheet {
+    animation-direction: reverse;
   }
 }
 

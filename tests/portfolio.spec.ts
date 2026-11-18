@@ -270,20 +270,36 @@ test('MicroGram buttons slide into a destination in the same tab', async ({ page
     ['Preview live in browser', 'https://idraakk.github.io/Microgram_Preview_Web/'],
   ];
 
+  await page.addInitScript(() => {
+    document.addEventListener('animationstart', (event) => {
+      const target = event.target;
+      if (event.animationName === 'folio-product-slide' && target instanceof HTMLElement && target.closest('[data-returning]')) {
+        document.documentElement.dataset.testMicroGramReturn = getComputedStyle(target).animationDirection;
+      }
+    });
+  });
+
   for (const [label, url] of destinations) {
     await context.route(url, (route) => route.fulfill({ body: 'MicroGram' }));
     await page.goto('./');
     const link = page.locator('#portfolio-products').getByRole('link', { name: label });
     await expect(link).toBeVisible();
-    const entry = page.evaluate(() => new Promise<string>((resolve) => {
+    const entry = page.evaluate(() => new Promise<string | null>((resolve) => {
       document.addEventListener('animationstart', function record(event) {
         if (event.animationName !== 'folio-product-slide') return;
         document.removeEventListener('animationstart', record);
-        resolve(event.animationName);
+        resolve((event.target as HTMLElement).querySelector('img')?.getAttribute('src') ?? null);
       });
     }));
     await Promise.all([page.waitForURL(url), link.click()]);
-    expect(await entry).toBe('folio-product-slide');
+    const demo = label === 'Preview live in browser';
+    expect(await entry).toBe(demo ? '/Portfolio_Website/microgram-startup.png' : null);
     expect(context.pages()).toHaveLength(1);
+    if (demo) {
+      await page.goBack();
+      await expect(page.locator('html')).toHaveAttribute('data-test-micro-gram-return', 'reverse');
+      await expect(link).toBeVisible();
+      await expect(page.locator('.folio-product-navigation')).toHaveCount(0);
+    }
   }
 });

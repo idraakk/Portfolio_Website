@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+html[data-microgram-return]::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: #000 url('/microgram-startup.png') center / min(288px, 100vw) auto no-repeat;
+}
+
 @layer base {
 
   :root,

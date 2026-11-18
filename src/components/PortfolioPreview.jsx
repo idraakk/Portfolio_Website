@@ -43,34 +43,70 @@ export default function PortfolioPreview() {
   const resume = `${import.meta.env.BASE_URL}resume.pdf`;
   const [productNavigation, setProductNavigation] = useState(null);
   const navigationSheet = useRef(null);
+  const portfolioScroll = useRef(null);
+
+  useEffect(() => {
+    let frame;
+    function restorePortfolio() {
+      const { microgramPortfolioReturn, ...state } = history.state ?? {};
+      if (!microgramPortfolioReturn) {
+        setProductNavigation(null);
+        return;
+      }
+      history.replaceState(state, '');
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (reducedMotion) document.documentElement.removeAttribute('data-microgram-return');
+      setProductNavigation(reducedMotion ? null : { branded: true, returning: true });
+      frame = requestAnimationFrame(() => {
+        if (portfolioScroll.current) portfolioScroll.current.scrollTop = microgramPortfolioReturn.scrollTop;
+      });
+    }
+    const restoreFromCache = (event) => { if (event.persisted) restorePortfolio(); };
+    if (performance.getEntriesByType('navigation')[0]?.type === 'back_forward') restorePortfolio();
+    window.addEventListener('pageshow', restoreFromCache);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener('pageshow', restoreFromCache);
+    };
+  }, []);
 
   useEffect(() => {
     if (!productNavigation) return;
     const reset = () => setProductNavigation(null);
-    const restore = (event) => { if (event.persisted) reset(); };
-    window.addEventListener('pageshow', restore);
-    window.addEventListener('popstate', reset);
+    const resetOnPop = () => setProductNavigation((current) => current?.returning ? current : null);
+    document.documentElement.removeAttribute('data-microgram-return');
+    window.addEventListener('popstate', resetOnPop);
     let canceled = false;
-    const visit = () => {
-      if (!canceled) window.location.assign(productNavigation.url);
+    const finish = () => {
+      if (canceled) return;
+      if (productNavigation.returning) {
+        reset();
+        return;
+      }
+      window.location.assign(productNavigation.url);
     };
     const entry = navigationSheet.current?.getAnimations?.()[0];
-    if (entry) entry.finished.then(visit, visit);
-    else visit();
+    if (entry) entry.finished.then(finish, finish);
+    else finish();
     return () => {
       canceled = true;
-      window.removeEventListener('pageshow', restore);
-      window.removeEventListener('popstate', reset);
+      window.removeEventListener('popstate', resetOnPop);
     };
   }, [productNavigation]);
 
-  function openProduct(event, title) {
+  function openProduct(event, title, branded = false) {
     if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    if (branded) {
+      history.replaceState({
+        ...history.state,
+        microgramPortfolioReturn: { scrollTop: portfolioScroll.current?.scrollTop ?? 0 },
+      }, '');
+    }
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const url = event.currentTarget.href;
     event.preventDefault();
-    setProductNavigation((pending) => pending ?? { url, title });
+    setProductNavigation((pending) => pending ?? { url, title, branded });
   }
 
   function jumpTo(event, id) {
@@ -82,7 +118,7 @@ export default function PortfolioPreview() {
   }
 
   return (
-    <div className="folio-scroll">
+    <div className="folio-scroll" ref={portfolioScroll}>
       <div className="folio">
         <nav className="folio-nav" aria-label="Portfolio navigation">
           <div className="folio-inner folio-nav-inner">
@@ -200,7 +236,7 @@ export default function PortfolioPreview() {
                       Explore {product.name} <ArrowUpRight size={15} aria-hidden="true" />
                     </a>
                     {product.previewUrl && (
-                      <a className="folio-primary folio-product-preview" href={product.previewUrl} onClick={(event) => openProduct(event, `${product.name} Preview`)}>
+                      <a className="folio-primary folio-product-preview" href={product.previewUrl} onClick={(event) => openProduct(event, product.name, true)}>
                         Preview live in browser <ArrowUpRight size={15} aria-hidden="true" />
                       </a>
                     )}
@@ -261,8 +297,12 @@ export default function PortfolioPreview() {
         </div>
       </div>
       {productNavigation && createPortal(
-        <div className="folio-product-navigation" aria-hidden="true">
-          <div ref={navigationSheet} className="folio-product-navigation-sheet">{productNavigation.title}</div>
+        <div className="folio-product-navigation" data-returning={productNavigation.returning || undefined} aria-hidden="true">
+          <div ref={navigationSheet} className="folio-product-navigation-sheet" data-branded={productNavigation.branded || undefined}>
+            {productNavigation.branded
+              ? <img src={`${import.meta.env.BASE_URL}microgram-startup.png`} alt="" />
+              : productNavigation.title}
+          </div>
         </div>,
         document.body,
       )}

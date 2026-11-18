@@ -5,8 +5,19 @@ import stylesheet from '@/index.css?url';
 import { ThemeProvider } from '@/hooks/use-theme.jsx';
 import { WorkspaceProvider } from '@/hooks/use-workspace.jsx';
 
+const prepareMicroGramReturn = `
+  if (
+    performance.getEntriesByType('navigation')[0]?.type === 'back_forward' &&
+    history.state?.microgramPortfolioReturn &&
+    matchMedia('(prefers-reduced-motion: no-preference)').matches
+  ) {
+    document.documentElement.setAttribute('data-microgram-return', '');
+  }
+`;
+
 export const links: Route.LinksFunction = () => [
   { rel: 'stylesheet', href: stylesheet },
+  { rel: 'preload', as: 'image', href: `${import.meta.env.BASE_URL}microgram-startup.png` },
   { rel: 'icon', href: `${import.meta.env.BASE_URL}favicon.svg`, type: 'image/svg+xml' },
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
   { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossOrigin: 'anonymous' },
@@ -15,11 +26,12 @@ export const links: Route.LinksFunction = () => [
 
 export function Layout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="color-scheme" content="only light" />
+        <script dangerouslySetInnerHTML={{ __html: prepareMicroGramReturn }} />
         <Meta />
         <Links />
       </head>
