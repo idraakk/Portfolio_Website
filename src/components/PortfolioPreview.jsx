@@ -153,7 +153,9 @@ export default function PortfolioPreview() {
               <article key={product.name} className="folio-product">
                 <div className="folio-product-screens">
                   {product.screenshots.map(({ src, alt }) => (
-                    <img key={src} src={`${import.meta.env.BASE_URL}${src}`} alt={alt} width={360} height={800} loading="lazy" decoding="async" />
+                    <div key={src} className="folio-product-phone">
+                      <img src={`${import.meta.env.BASE_URL}${src}`} alt={alt} width={360} height={800} loading="lazy" decoding="async" />
+                    </div>
                   ))}
                 </div>
                 <div className="folio-product-copy">

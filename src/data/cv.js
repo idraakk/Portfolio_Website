@@ -118,6 +118,7 @@ export const cv = {
       url: 'https://idraakk.github.io/Idraak-Collection/microgram/index.html',
       screenshots: [
         { src: 'microgram-lecture-profile.webp', alt: 'MicroGram lecture overview showing progress and a grid of short reels' },
+        { src: 'microgram-library.webp', alt: 'MicroGram Library showing imported videos and playlists' },
         { src: 'microgram-reel.webp', alt: 'MicroGram full-screen reel player showing a lecture' },
       ],
     },

@@ -209,9 +209,13 @@ test('mobile explorer and content fit the viewport', async ({ page }) => {
   ]);
   await productTab.waitForURL(microGramUrl);
   await productTab.close();
-  for (const screenshot of await products.getByRole('img').all()) {
+  const screenshots = products.getByRole('img');
+  await expect(screenshots).toHaveCount(3);
+  await expect(screenshots.nth(1)).toHaveAttribute('src', '/Portfolio_Website/microgram-library.webp');
+  for (const screenshot of await screenshots.all()) {
     await expect(screenshot).toHaveJSProperty('naturalWidth', 360);
   }
+  await products.locator('.folio-product-screens').screenshot({ path: 'test-results/mobile-microgram-phones.png', animations: 'disabled' });
   await page.screenshot({ path: 'test-results/mobile-products.png', fullPage: true, animations: 'disabled' });
   await preview.getByRole('link', { name: 'Portfolio home' }).click();
   await expect(preview.getByRole('heading', { level: 1 })).toBeInViewport();
