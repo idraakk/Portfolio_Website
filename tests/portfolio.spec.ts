@@ -1,5 +1,34 @@
 import { test, expect } from '@playwright/test';
 
+test('browser appearance does not recolor the editor or preview', async ({ page }) => {
+  await page.goto('./');
+  const editor = page.getByRole('region', { name: 'Code editor' });
+  const preview = page.locator('.folio-hero');
+  await expect(page.locator('meta[name="color-scheme"]')).toHaveAttribute('content', 'only light');
+  await expect(page.locator('html')).toHaveCSS('color-scheme', /^(light only|only light)$/);
+  await expect(preview).toBeVisible();
+  await page.evaluate(() => document.fonts.ready);
+  const editorBounds = (await editor.boundingBox())!;
+  const previewBounds = (await preview.boundingBox())!;
+  const editorClip = { ...editorBounds, height: 180 };
+  const previewClip = { ...previewBounds, width: previewBounds.width - 16, height: 180 };
+
+  await page.emulateMedia({ colorScheme: 'light', forcedColors: 'none' });
+  const editorColors = await page.screenshot({ clip: editorClip });
+  const previewColors = await page.screenshot({ clip: previewClip });
+  await page.emulateMedia({ colorScheme: 'dark', forcedColors: 'none' });
+  const rendering = await page.context().newCDPSession(page);
+  await rendering.send('Emulation.setAutoDarkModeOverride', { enabled: true });
+
+  expect((await page.screenshot({ clip: editorClip })).equals(editorColors)).toBe(true);
+  expect((await page.screenshot({ clip: previewClip })).equals(previewColors)).toBe(true);
+
+  await rendering.send('Emulation.setAutoDarkModeOverride', { enabled: false });
+  await page.emulateMedia({ colorScheme: 'dark', forcedColors: 'active' });
+  expect((await page.screenshot({ clip: editorClip })).equals(editorColors)).toBe(true);
+  expect((await page.screenshot({ clip: previewClip })).equals(previewColors)).toBe(true);
+});
+
 test('portfolio navigation, links, themes, and closing tabs', async ({ page, request }) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));

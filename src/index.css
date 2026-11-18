@@ -205,6 +205,9 @@
   }
 
   html {
+    /* The portfolio paints its own palettes, including the dark editor themes. */
+    color-scheme: only light;
+    forced-color-adjust: none;
     scroll-behavior: smooth;
   }
 
