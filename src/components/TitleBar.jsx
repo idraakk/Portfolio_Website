@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Check, Minus, Square, X } from 'lucide-react';
+import { ChevronDown, Check, Minus, Play, Square, X } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme.jsx';
 import { useWorkspace } from '@/hooks/use-workspace.jsx';
 import { cv } from '@/data/cv.js';
@@ -11,7 +11,7 @@ const TrafficLight = ({ color }) => (
   />
 );
 
-export default function TitleBar() {
+export default function TitleBar({ onRun }) {
   const { theme, setTheme, themes } = useTheme();
   const { activeFile, togglePalette } = useWorkspace();
   const [open, setOpen] = useState(false);
@@ -26,7 +26,7 @@ export default function TitleBar() {
   }, []);
 
   return (
-    <div className="h-9 shrink-0 flex items-center justify-between px-3 bg-[var(--chrome-titlebar)] border-b border-[var(--chrome-border)] text-[12px] text-[var(--chrome-fg-muted)] select-none">
+    <div className="h-11 lg:h-9 shrink-0 flex items-center justify-between px-3 bg-[var(--chrome-titlebar)] border-b border-[var(--chrome-border)] text-[12px] text-[var(--chrome-fg-muted)] select-none">
       <div className="flex items-center gap-2 hidden sm:flex sm:w-20 lg:w-44">
         <TrafficLight color="#FF5F57" />
         <TrafficLight color="#FEBC2E" />
@@ -46,7 +46,7 @@ export default function TitleBar() {
         </span>
       </button>
 
-      <div className="flex items-center gap-1 shrink-0 sm:w-44 justify-end" ref={ref}>
+      <div className="flex items-center gap-1 shrink-0 justify-end" ref={ref}>
         <div className="relative">
           <button
             onClick={() => setOpen((v) => !v)}
@@ -74,6 +74,9 @@ export default function TitleBar() {
             </div>
           )}
         </div>
+        <button type="button" className="portfolio-run-button" onClick={onRun} aria-label="Run portfolio" aria-controls="portfolio-output">
+          <Play size={13} fill="currentColor" aria-hidden="true" /> Run
+        </button>
         <div className="hidden lg:flex items-center gap-1 ml-2 opacity-60">
           <Minus className="w-3.5 h-3.5" />
           <Square className="w-3 h-3" />

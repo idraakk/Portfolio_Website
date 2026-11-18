@@ -11,7 +11,7 @@ export function WorkspaceProvider({ children }) {
   const [paletteOpen, setPaletteOpen] = useState(false);
 
   useEffect(() => {
-    if (window.matchMedia('(max-width: 767px)').matches) { setSidebarOpen(false); setTerminalOpen(false); }
+    if (window.matchMedia('(max-width: 767px)').matches) setSidebarOpen(false);
   }, []);
 
   const openFile = useCallback((id) => {

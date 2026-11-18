@@ -36,6 +36,7 @@ export const cv = {
       period: 'Jan 2026 — Jun 2026',
       location: 'Bengaluru, India',
       type: 'Internship',
+      summary: 'Modernized a production web application, rebuilt APIs for vendor expansion, and automated configuration changes across hundreds of locations.',
       stack: ['Java', 'GraphQL', 'AWS AppSync', 'DynamoDB', 'SQS FIFO', 'ECS Fargate', 'AWS CDK', 'Amazon Bedrock'],
       projects: {
         'Selection & Growth Hub': [
@@ -60,6 +61,7 @@ export const cv = {
       period: 'Jul 2025 — Dec 2025',
       location: 'Remote',
       type: 'Internship',
+      summary: 'Built an AI study assistant that turns YouTube videos and uploaded lectures into searchable material, summaries, and quizzes.',
       stack: ['Python', 'FastAPI', 'RAG', 'PostgreSQL', 'React', 'TypeScript'],
       projects: {
         'RAG-Based YouTube Lecture Assistant': [
@@ -102,6 +104,12 @@ export const cv = {
   projects: [
     {
       name: 'Agentic Browser',
+      cover: {
+        src: 'agentic-browser.webp',
+        alt: 'Illustrative Agentic Browser demo. The extension reads a trail guide and finds the shortest trail.',
+        width: 1774,
+        height: 887,
+      },
       tagline: 'An AI-powered browser extension that turns natural-language requests into browser actions.',
       description: 'Uses DOM snapshots and page screenshots to plan and execute nine browser action types with step limits and execution feedback. LangGraph coordinates ReAct and multi-agent workflows with live SSE updates. The FastAPI backend supports six LLM providers, PostgreSQL-backed memory with vector retrieval, and an MCP server for external coding agents.',
       url: 'https://github.com/idraakk/Agentic_Browser',

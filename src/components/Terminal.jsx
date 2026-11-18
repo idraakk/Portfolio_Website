@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ChevronUp, ChevronDown, Plus, Trash2, X } from 'lucide-react';
+import { ChevronUp, ChevronDown, GripHorizontal, Plus, Trash2, X } from 'lucide-react';
+import PaneDivider from '@/components/PaneDivider.jsx';
 import { useWorkspace } from '@/hooks/use-workspace.jsx';
 import { cv } from '@/data/cv.js';
 
@@ -27,6 +28,7 @@ const buildScript = () => [
 
 const TYPING_SPEED = 22;
 const PAUSE_BETWEEN = 350;
+const MIN_TERMINAL_HEIGHT = 64;
 
 export default function Terminal() {
   const { terminalOpen, toggleTerminal } = useWorkspace();
@@ -34,10 +36,30 @@ export default function Terminal() {
   const [typingLine, setTypingLine] = useState('');
   const [replay, setReplay] = useState(0);
   const [done, setDone] = useState(false);
+  const [preferredHeight, setPreferredHeight] = useState(null);
+  const [terminalSize, setTerminalSize] = useState(null);
+  const terminalRef = useRef(null);
   const scriptRef = useRef(buildScript());
   const indexRef = useRef(0);
   const charRef = useRef(0);
   const bottomRef = useRef(null);
+
+  useEffect(() => {
+    if (!terminalOpen) return;
+    const editor = terminalRef.current.parentElement;
+    const measure = () => {
+      if (!editor.clientHeight) return;
+      const max = Math.max(MIN_TERMINAL_HEIGHT, editor.clientHeight - 108);
+      const defaultHeight = window.matchMedia('(min-width: 1024px)').matches
+        ? 224
+        : Math.min(192, Math.max(112, Math.round(window.innerHeight * 0.24)));
+      setTerminalSize({ max, defaultHeight: Math.min(max, defaultHeight) });
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(editor);
+    return () => observer.disconnect();
+  }, [terminalOpen]);
 
   useEffect(() => {
     if (!terminalOpen) return;
@@ -89,24 +111,36 @@ export default function Terminal() {
     );
   }
 
+  const maxHeight = terminalSize?.max ?? 224;
+  const defaultHeight = terminalSize?.defaultHeight ?? 224;
+  const height = Math.min(preferredHeight ?? defaultHeight, maxHeight);
+
   return (
-    <div className="h-56 shrink-0 flex flex-col bg-[var(--chrome-terminal)] border-t border-[var(--chrome-border)]">
-      <div className="h-8 shrink-0 flex items-center justify-between bg-[var(--chrome-tabbar)] border-b border-[var(--chrome-border)] px-2 text-[11px] text-[var(--chrome-fg-muted)]">
-        <div className="flex items-center gap-1">
-          {['TERMINAL'].map((label) => (
-            <button
-              key={label}
-              className={`px-2.5 h-6 rounded ${
-                label === 'TERMINAL'
-                  ? 'text-[var(--chrome-fg)] border-b-2 border-[var(--accent)]'
-                  : 'hover:text-[var(--chrome-fg)]'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        <div className="flex items-center gap-1">
+    <div
+      id="portfolio-terminal"
+      ref={terminalRef}
+      role="region"
+      aria-label="Terminal"
+      className="h-[clamp(7rem,24dvh,12rem)] lg:h-56 shrink-0 flex flex-col bg-[var(--chrome-terminal)] border-t border-[var(--chrome-border)]"
+      style={terminalSize ? { height } : undefined}
+    >
+      <div className="h-8 shrink-0 flex items-stretch bg-[var(--chrome-tabbar)] border-b border-[var(--chrome-border)] text-[11px] text-[var(--chrome-fg-muted)]">
+        <PaneDivider
+          label="Resize terminal"
+          paneId="portfolio-terminal"
+          orientation="horizontal"
+          min={MIN_TERMINAL_HEIGHT}
+          max={maxHeight}
+          value={height}
+          defaultValue={defaultHeight}
+          step={16}
+          unit="px"
+          onChange={setPreferredHeight}
+        >
+          <span className="px-2.5 leading-6 border-b-2 border-[var(--accent)] text-[var(--chrome-fg)]">Terminal</span>
+          <GripHorizontal size={16} aria-hidden="true" />
+        </PaneDivider>
+        <div className="flex items-center gap-1 pr-2">
           <span className="hidden md:inline px-2 text-[10px]">zsh — {PROMPT}</span>
           <button className="p-1 hover:bg-[var(--chrome-hover)] rounded" title="Replay terminal" onClick={() => { indexRef.current = 0; charRef.current = 0; setRendered([]); setTypingLine(''); setDone(false); setReplay((n) => n + 1); }}>
             <Plus className="w-3.5 h-3.5" />

@@ -56,7 +56,7 @@ export default function FileExplorer() {
   const repo = cv.meta.repo.split('/').pop();
 
   return (
-    <aside className="absolute inset-y-0 left-12 z-40 md:static w-64 shrink-0 flex flex-col bg-[var(--chrome-sidebar)] border-r border-[var(--chrome-border)] text-[var(--chrome-fg)]">
+    <aside id="portfolio-file-explorer" className="absolute inset-y-0 left-12 z-40 md:static w-64 shrink-0 flex flex-col bg-[var(--chrome-sidebar)] border-r border-[var(--chrome-border)] text-[var(--chrome-fg)]">
       <div className="h-9 flex items-center justify-between px-4 text-[11px] uppercase tracking-wider text-[var(--chrome-fg-muted)] border-b border-[var(--chrome-border)]">
         <span>Explorer</span>
         <MoreHorizontal className="w-4 h-4 opacity-60" />

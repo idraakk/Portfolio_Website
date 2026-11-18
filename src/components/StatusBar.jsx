@@ -33,7 +33,7 @@ export default function StatusBar() {
           <AlertTriangle className="w-3 h-3 ml-1" />
           <span>0</span>
         </span>
-        <span className="flex items-center gap-1 hover:bg-white/10 px-1.5 h-full">
+        <span className="hidden sm:flex items-center gap-1 whitespace-nowrap hover:bg-white/10 px-1.5 h-full">
           <Check className="w-3 h-3" />
           <span>build passing</span>
         </span>
