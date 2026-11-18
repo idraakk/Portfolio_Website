@@ -782,6 +782,43 @@
   background: #edcbdd;
 }
 
+.folio-product-navigation {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  overflow: hidden;
+}
+
+.folio-product-navigation-sheet {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: #fff8f9;
+  color: #55253f;
+  font: 400 clamp(2rem, 6vw, 3.5rem)/1 'Instrument Serif', Georgia, serif;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .folio-product-navigation {
+    animation: folio-product-dim 190ms ease-out both;
+  }
+
+  .folio-product-navigation-sheet {
+    animation: folio-product-slide 190ms cubic-bezier(0.2, 0.75, 0.3, 1) both;
+  }
+}
+
+@keyframes folio-product-dim {
+  from { background-color: transparent; }
+  to { background-color: rgb(20 15 20 / 55%); }
+}
+
+@keyframes folio-product-slide {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
 .folio-collection-link {
   margin-top: 0.9rem;
 }

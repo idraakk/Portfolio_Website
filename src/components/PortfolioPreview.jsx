@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   ArrowUpRight, ChevronDown, Mail, MapPin,
 } from 'lucide-react';
@@ -40,6 +41,39 @@ function NewTabLink(props) {
 export default function PortfolioPreview() {
   const { identity, experience, collection, products, projects, skills, education, certifications, contact, social, stats } = cv;
   const resume = `${import.meta.env.BASE_URL}resume.pdf`;
+  const [productNavigation, setProductNavigation] = useState(null);
+  const navigationSheet = useRef(null);
+
+  useEffect(() => {
+    if (!productNavigation) return;
+    const reset = () => setProductNavigation(null);
+    const restore = (event) => { if (event.persisted) reset(); };
+    window.addEventListener('pageshow', restore);
+    window.addEventListener('popstate', reset);
+    let canceled = false;
+    const visit = () => {
+      if (!canceled) window.location.assign(productNavigation.url);
+    };
+    const entry = navigationSheet.current?.getAnimations?.()[0];
+    if (entry) entry.finished.then(visit, visit);
+    else visit();
+    return () => {
+      canceled = true;
+      window.removeEventListener('pageshow', restore);
+      window.removeEventListener('popstate', reset);
+    };
+  }, [productNavigation]);
+
+  function openProduct(event, title, nativeTransition = false) {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const url = new URL(event.currentTarget.href);
+    if (nativeTransition && url.origin === window.location.origin && 'PageSwapEvent' in window) return;
+
+    event.preventDefault();
+    setProductNavigation((pending) => pending ?? { url: url.href, title });
+  }
 
   function jumpTo(event, id) {
     event.preventDefault();
@@ -164,11 +198,13 @@ export default function PortfolioPreview() {
                   <p className="folio-job-title">{product.tagline}</p>
                   <p className="folio-description">{product.description}</p>
                   <div className="folio-product-actions">
-                    <NewTabLink className="folio-primary" href={product.url}>Explore {product.name} <ArrowUpRight size={15} aria-hidden="true" /></NewTabLink>
+                    <a className="folio-primary" href={product.url} onClick={(event) => openProduct(event, product.name, true)}>
+                      Explore {product.name} <ArrowUpRight size={15} aria-hidden="true" />
+                    </a>
                     {product.previewUrl && (
-                      <NewTabLink className="folio-primary folio-product-preview" href={product.previewUrl}>
+                      <a className="folio-primary folio-product-preview" href={product.previewUrl} onClick={(event) => openProduct(event, `${product.name} Preview`)}>
                         Preview live in browser <ArrowUpRight size={15} aria-hidden="true" />
-                      </NewTabLink>
+                      </a>
                     )}
                   </div>
                 </div>
@@ -226,6 +262,12 @@ export default function PortfolioPreview() {
           </section>
         </div>
       </div>
+      {productNavigation && createPortal(
+        <div className="folio-product-navigation" aria-hidden="true">
+          <div ref={navigationSheet} className="folio-product-navigation-sheet">{productNavigation.title}</div>
+        </div>,
+        document.body,
+      )}
     </div>
   );
 }

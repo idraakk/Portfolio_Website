@@ -43,7 +43,7 @@ test('portfolio navigation, links, themes, and closing tabs', async ({ page, req
   const hero = preview.locator('.folio-hero');
   await expect(hero.getByRole('heading', { level: 1 })).toHaveCSS('animation-delay', '0.145s');
   await expect(hero.locator('.folio-tagline')).toHaveCSS('animation-delay', '0.225s');
-  const outboundLinks = await preview.locator('a:not([href^="#"])').evaluateAll((anchors) =>
+  const outboundLinks = await preview.locator('a:not([href^="#"], .folio-product-actions a)').evaluateAll((anchors) =>
     anchors.map((anchor) => ({ target: anchor.getAttribute('target'), rel: anchor.getAttribute('rel') })),
   );
   expect(outboundLinks.length).toBeGreaterThan(0);
@@ -213,16 +213,8 @@ test('mobile explorer and content fit the viewport', async ({ page }) => {
   await expect(products.getByRole('link', { name: 'Explore MicroGram' })).toHaveAttribute('href', 'https://idraakk.github.io/Idraak-Collection/microgram/index.html');
   const livePreview = products.getByRole('link', { name: 'Preview live in browser' });
   await expect(livePreview).toHaveAttribute('href', 'https://idraakk.github.io/Microgram_Preview_Web/');
-  await expect(livePreview).toHaveAttribute('target', '_blank');
+  await expect(livePreview).not.toHaveAttribute('target', '_blank');
   await expect(products.getByRole('link', { name: /Browse Idraak/ })).toHaveAttribute('href', 'https://idraakk.github.io/Idraak-Collection/');
-  const microGramUrl = 'https://idraakk.github.io/Idraak-Collection/microgram/index.html';
-  await page.context().route(microGramUrl, (route) => route.fulfill({ body: 'MicroGram' }));
-  const [productTab] = await Promise.all([
-    page.waitForEvent('popup'),
-    products.getByRole('link', { name: 'Explore MicroGram' }).click(),
-  ]);
-  await productTab.waitForURL(microGramUrl);
-  await productTab.close();
   const screenshots = products.getByRole('img');
   await expect(screenshots).toHaveCount(3);
   await expect(screenshots.nth(1)).toHaveAttribute('src', '/Portfolio_Website/microgram-library.webp');
@@ -270,4 +262,28 @@ test('mobile explorer and content fit the viewport', async ({ page }) => {
   await preview.getByRole('button', { name: 'Editor', exact: true }).click();
   await expect(runWord).toHaveCSS('animation-name', 'none');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
+test('MicroGram buttons slide into a destination in the same tab', async ({ page, context }) => {
+  const destinations = [
+    ['Explore MicroGram', 'https://idraakk.github.io/Idraak-Collection/microgram/index.html'],
+    ['Preview live in browser', 'https://idraakk.github.io/Microgram_Preview_Web/'],
+  ];
+
+  for (const [label, url] of destinations) {
+    await context.route(url, (route) => route.fulfill({ body: 'MicroGram' }));
+    await page.goto('./');
+    const link = page.locator('#portfolio-products').getByRole('link', { name: label });
+    await expect(link).toBeVisible();
+    const entry = page.evaluate(() => new Promise<string>((resolve) => {
+      document.addEventListener('animationstart', function record(event) {
+        if (event.animationName !== 'folio-product-slide') return;
+        document.removeEventListener('animationstart', record);
+        resolve(event.animationName);
+      });
+    }));
+    await Promise.all([page.waitForURL(url), link.click()]);
+    expect(await entry).toBe('folio-product-slide');
+    expect(context.pages()).toHaveLength(1);
+  }
 });
