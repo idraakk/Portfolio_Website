@@ -64,15 +64,13 @@ export default function PortfolioPreview() {
     };
   }, [productNavigation]);
 
-  function openProduct(event, title, nativeTransition = false) {
+  function openProduct(event, title) {
     if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    const url = new URL(event.currentTarget.href);
-    if (nativeTransition && url.origin === window.location.origin && 'PageSwapEvent' in window) return;
-
+    const url = event.currentTarget.href;
     event.preventDefault();
-    setProductNavigation((pending) => pending ?? { url: url.href, title });
+    setProductNavigation((pending) => pending ?? { url, title });
   }
 
   function jumpTo(event, id) {
@@ -198,7 +196,7 @@ export default function PortfolioPreview() {
                   <p className="folio-job-title">{product.tagline}</p>
                   <p className="folio-description">{product.description}</p>
                   <div className="folio-product-actions">
-                    <a className="folio-primary" href={product.url} onClick={(event) => openProduct(event, product.name, true)}>
+                    <a className="folio-primary" href={product.url} onClick={(event) => openProduct(event, product.name)}>
                       Explore {product.name} <ArrowUpRight size={15} aria-hidden="true" />
                     </a>
                     {product.previewUrl && (
